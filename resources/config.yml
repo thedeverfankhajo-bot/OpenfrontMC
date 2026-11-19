@@ -5,16 +5,21 @@ map:
   seed: 20261119
   width: 16
   height: 16
+  territory-size: 16
   continent-count: 4
   island-count: 18
   water-ratio: 0.58
 territory:
   block-size: 16
   claim-cost: 25
-economy:
-  capacity: 100000
-  starting: {gold: 100, food: 80, materials: 60, energy: 30, research: 0, influence: 10}
-  income_per_period: {gold: 5, food: 3, materials: 2, energy: 1, research: 1, influence: 1}
+diplomacy:
+  request-expiry-seconds: 86400
+  max-pending-per-hour: 4
+  treaty-duration-seconds:
+    ALLIANCE: 604800
+    TRADE: 604800
+    NON_AGGRESSION: 604800
+    PEACE: 0
 match:
   capacity: 16
   minimum-players: 2

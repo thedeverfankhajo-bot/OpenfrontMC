@@ -1,6 +1,6 @@
 name: OpenFrontMC
 main: OpenFrontMC\Main
-version: 0.1.0
+version: 0.2.0
 api: [5.0.0]
 author: OpenFrontMC contributors
 description: A server-authoritative territorial strategy game mode for Minecraft Bedrock.
@@ -19,4 +19,46 @@ permissions:
     default: op
   openfront.admin.build:
     description: Allows building in plugin-managed OpenFrontMC worlds.
+    default: op
+  openfront.country:
+    description: Allows country creation and information commands.
+    default: true
+  openfront.territory:
+    description: Allows claiming adjacent territories.
+    default: true
+  openfront.economy:
+    description: Allows viewing country economy.
+    default: true
+  openfront.building:
+    description: Allows building management commands.
+    default: true
+  openfront.research:
+    description: Allows researching technologies.
+    default: true
+  openfront.diplomacy:
+    description: Allows diplomacy commands.
+    default: true
+  openfront.map:
+    description: Allows map information commands.
+    default: true
+  openfront.match:
+    description: Allows match participation commands.
+    default: true
+  openfront.stats:
+    description: Allows player statistics and leaderboard commands.
+    default: true
+  openfront.admin.status:
+    description: Allows viewing administrative status.
+    default: op
+  openfront.admin.setup:
+    description: Allows checking managed world setup.
+    default: op
+  openfront.admin.match:
+    description: Allows match lifecycle administration.
+    default: op
+  openfront.admin.reload:
+    description: Allows reloading plugin configuration.
+    default: op
+  openfront.admin.debug:
+    description: Allows diagnostic information access.
     default: op

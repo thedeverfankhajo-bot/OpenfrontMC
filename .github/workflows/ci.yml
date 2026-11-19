@@ -1,13 +1,16 @@
 name: OpenFrontMC CI
+
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
   quality:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,7 +25,13 @@ jobs:
         run: composer validate --no-check-publish
       - name: Install dev tools
         run: composer install --no-interaction --prefer-dist
-      - name: Unit tests
+      - name: Validate plugin manifest target
+        run: |
+          grep -q '^name: OpenFrontMC$' plugin.yml
+          grep -Fq 'main: OpenFrontMC\Main' plugin.yml
+          grep -Fq 'api: [5.0.0]' plugin.yml
+          ! grep -Eq 'api:.*(4\.|6\.)' plugin.yml
+      - name: Unit and SQLite service tests
         run: composer test
       - name: Static analysis
         run: composer analyse
@@ -32,6 +41,7 @@ jobs:
           test -f composer.json
           test -f README.md
           test -f LICENSE
+          test -f phpstan.neon
           test -f resources/config.yml
           test -f resources/languages/en_US.yml
           test -f resources/languages/fa_IR.yml
@@ -39,3 +49,5 @@ jobs:
           test -f resources/research/technology.yml
           test -f resources/buildings/buildings.yml
           test -f resources/economy.yml
+          test -f docs/ADMIN_GUIDE.md
+          test -f docs/PLAYER_GUIDE.md

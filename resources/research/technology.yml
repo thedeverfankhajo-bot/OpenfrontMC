@@ -1,3 +1,31 @@
 technologies:
-  improved_agriculture: {branch: economic, cost: {research: 20, gold: 10}, prerequisites: [], effects: {food_multiplier: 1.1}}
-  efficient_industry: {branch: infrastructure, cost: {research: 35, materials: 15}, prerequisites: [improved_agriculture], effects: {materials_multiplier: 1.1}}
+  improved_agriculture:
+    branch: economic
+    cost: {research: 20, gold: 10}
+    prerequisites: []
+    effects: {food_multiplier: 1.1}
+  efficient_industry:
+    branch: infrastructure
+    cost: {research: 35, materials: 15}
+    prerequisites: [improved_agriculture]
+    effects: {materials_multiplier: 1.1}
+  energy_optimization:
+    branch: economic
+    cost: {research: 30, gold: 15}
+    prerequisites: [improved_agriculture]
+    effects: {energy_multiplier: 1.15}
+  scientific_method:
+    branch: science
+    cost: {research: 45, materials: 10}
+    prerequisites: [efficient_industry]
+    effects: {research_multiplier: 1.2}
+  administrative_network:
+    branch: diplomacy
+    cost: {research: 40, influence: 8}
+    prerequisites: [scientific_method]
+    effects: {influence_multiplier: 1.15}
+  commercial_routes:
+    branch: diplomacy
+    cost: {research: 55, gold: 25}
+    prerequisites: [administrative_network]
+    effects: {gold_multiplier: 1.15}

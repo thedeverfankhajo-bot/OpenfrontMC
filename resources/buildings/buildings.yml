@@ -1,6 +1,61 @@
 buildings:
-  capital: {cost: {gold: 0}, production: {gold: 2, influence: 1}}
-  farm: {cost: {gold: 15, materials: 5}, production: {food: 5}}
-  factory: {cost: {gold: 25, materials: 15}, production: {materials: 4}}
-  research_center: {cost: {gold: 30, materials: 10, energy: 5}, production: {research: 3}}
-  energy_plant: {cost: {gold: 20, materials: 10}, production: {energy: 4}}
+  capital:
+    cost: {gold: 0, materials: 0}
+    production: {gold: 2, influence: 1}
+    max-level: 5
+    max-per-country: 1
+    max-per-territory: 1
+  town:
+    cost: {gold: 20, materials: 10}
+    production: {gold: 1, food: 1}
+    max-level: 5
+    max-per-country: 12
+    max-per-territory: 1
+  farm:
+    cost: {gold: 15, materials: 5}
+    production: {food: 5}
+    max-level: 8
+    max-per-country: 32
+    max-per-territory: 1
+  factory:
+    cost: {gold: 25, materials: 15}
+    production: {materials: 4}
+    max-level: 8
+    max-per-country: 24
+    max-per-territory: 1
+  research_center:
+    cost: {gold: 30, materials: 10, energy: 5}
+    production: {research: 3}
+    max-level: 8
+    max-per-country: 12
+    max-per-territory: 1
+  energy_plant:
+    cost: {gold: 20, materials: 10}
+    production: {energy: 4}
+    max-level: 8
+    max-per-country: 16
+    max-per-territory: 1
+  port:
+    cost: {gold: 24, materials: 12}
+    production: {influence: 1, gold: 1}
+    max-level: 5
+    max-per-country: 8
+    max-per-territory: 1
+  market:
+    cost: {gold: 18, materials: 8}
+    production: {gold: 3}
+    max-level: 8
+    max-per-country: 16
+    max-per-territory: 1
+  storage:
+    cost: {gold: 16, materials: 12}
+    production: {influence: 1}
+    max-level: 5
+    max-per-country: 8
+    max-per-territory: 1
+  administration_center:
+    cost: {gold: 35, materials: 18, influence: 5}
+    production: {influence: 3}
+    max-level: 5
+    max-per-country: 4
+    max-per-territory: 1
