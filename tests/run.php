@@ -121,7 +121,7 @@ $database = null;
 try{
     $database = new Database($databasePath);
     $database->migrate();
-    $assert((int) ($database->fetchOne("PRAGMA user_version")["user_version"] ?? 0) === 2, "database migration version");
+    $assert((int) ($database->fetchOne("PRAGMA user_version")["user_version"] ?? 0) === 3, "database migration version");
     $backupPath = $databasePath . ".backup";
     $database->backup($backupPath);
     $backupDatabase = new SQLite3($backupPath, SQLITE3_OPEN_READONLY);
@@ -131,7 +131,7 @@ try{
         @unlink($backupPath);
     }
     $database->migrate();
-    $assert((int) ($database->fetchOne("PRAGMA user_version")["user_version"] ?? 0) === 2, "database migration is idempotent");
+    $assert((int) ($database->fetchOne("PRAGMA user_version")["user_version"] ?? 0) === 3, "database migration is idempotent");
     $renderTable = $database->fetchOne("SELECT name FROM sqlite_master WHERE type='table' AND name='rendered_territories'");
     $assert($renderTable !== null, "terrain render progress migration");
 
@@ -143,6 +143,21 @@ try{
     $secondCountryId = $countries->create("PlayerTwo", "South Horizon", "SHR");
     $assert($countries->byPlayer("PlayerOne")["id"] === $countryId, "country lookup by player");
     $assert($countries->byTag("SHR")["id"] === $secondCountryId, "country lookup by tag");
+
+    $invitationId = $countries->invite("PlayerOne", "PlayerThree", 3600);
+    $assert(count($countries->pendingInvitations("PlayerThree")) === 1, "country invitation visible only to target");
+    $assert($countries->acceptInvitation("PlayerThree", $invitationId) === $countryId, "country invitation accepted");
+    $assert($countries->byPlayer("PlayerThree")["member_role"] === "MEMBER", "invited player joins as member");
+    $countries->setRole("PlayerOne", "PlayerThree", "OFFICER");
+    $countries->kick("PlayerOne", "PlayerThree");
+    $assert($countries->byPlayer("PlayerThree") === null, "leader removes member");
+    $countries->invite("PlayerOne", "PlayerThree", 3600);
+    $secondInvitation = $countries->pendingInvitations("PlayerThree")[0]["id"];
+    $countries->acceptInvitation("PlayerThree", (string) $secondInvitation);
+    $countries->transferLeadership("PlayerOne", "PlayerThree");
+    $assert($countries->byPlayer("PlayerThree")["member_role"] === "LEADER", "leadership transfer");
+    $assert($countries->byPlayer("PlayerOne")["member_role"] === "OFFICER", "previous leader becomes officer");
+    $countries->transferLeadership("PlayerThree", "PlayerOne");
 
     $territories = new TerritoryManager($database);
     $territories->seedNeutralMap(12345, 8, 8, $mapA);
@@ -162,6 +177,11 @@ try{
     $economy = new EconomyManager($database, ["capacity" => 1000, "income_per_period" => ["gold" => 5]]);
     $economy->change($countryId, "PlayerOne", "UNIT_TEST_CREDIT", ["gold" => 10]);
     $assert($economy->balance($countryId)["gold"] === 185, "economy transaction persisted");
+    $economy->transfer($countryId, $secondCountryId, "PlayerOne", ["gold" => 20, "food" => 5]);
+    $assert($economy->balance($countryId)["gold"] === 165, "trade debit applied");
+    $assert($economy->balance($secondCountryId)["gold"] === 220, "trade credit applied");
+    $expectException(static fn() => $economy->transfer($countryId, $secondCountryId, "PlayerOne", ["gold" => 1000000]), "trade rejects recipient capacity overflow");
+    $assert($economy->balance($countryId)["gold"] === 165, "failed trade is atomic");
     $expectException(
         static fn() => $economy->applyAtomic($countryId, "PlayerOne", "UNIT_TEST_ROLLBACK", ["gold" => 30], static function() : void{
             throw new RuntimeException("rollback test");
@@ -233,7 +253,7 @@ try{
     $legacyDatabase->execute("DROP TABLE rendered_territories");
     $legacyDatabase->execute("PRAGMA user_version = 1");
     $legacyDatabase->migrate();
-    $assert((int) ($legacyDatabase->fetchOne("PRAGMA user_version")["user_version"] ?? 0) === 2, "version 1 database migrates forward");
+    $assert((int) ($legacyDatabase->fetchOne("PRAGMA user_version")["user_version"] ?? 0) === 3, "version 1 database migrates forward");
     $assert($legacyDatabase->fetchOne("SELECT name FROM sqlite_master WHERE type='table' AND name='rendered_territories'") !== null, "version 1 migration adds terrain checkpoints");
 }finally{
     if($legacyDatabase instanceof Database){

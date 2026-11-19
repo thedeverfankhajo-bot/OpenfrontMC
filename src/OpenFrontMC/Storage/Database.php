@@ -32,11 +32,8 @@ final class Database{
     public function migrate() : void{
         $versionRow = $this->fetchOne("PRAGMA user_version");
         $version = (int) ($versionRow["user_version"] ?? 0);
-        if($version > 2){
+        if($version > 3){
             throw new RuntimeException("The database schema is newer than this plugin version supports.");
-        }
-        if($version === 2){
-            return;
         }
         if($version === 1){
             $this->transaction(function() : void{
@@ -47,6 +44,36 @@ CREATE TABLE IF NOT EXISTS rendered_territories (
     FOREIGN KEY(territory_id) REFERENCES territories(id) ON DELETE CASCADE
 );
 PRAGMA user_version = 2;
+SQL);
+            });
+            $this->migrate();
+            return;
+        }
+
+        if($version === 2){
+            $this->transaction(function() : void{
+                $this->runExec(<<<SQL
+CREATE TABLE IF NOT EXISTS country_invitations (
+    id TEXT PRIMARY KEY,
+    country_id TEXT NOT NULL,
+    target_player TEXT NOT NULL,
+    inviter_name TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING',
+    created_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL,
+    responded_at INTEGER NULL,
+    FOREIGN KEY(country_id) REFERENCES countries(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_country_invitations_target ON country_invitations(target_player, status, expires_at);
+CREATE TABLE IF NOT EXISTS research_queue (
+    country_id TEXT PRIMARY KEY,
+    technology_id TEXT NOT NULL,
+    started_at INTEGER NOT NULL,
+    completes_at INTEGER NOT NULL,
+    FOREIGN KEY(country_id) REFERENCES countries(id) ON DELETE CASCADE
+);
+ALTER TABLE matches ADD COLUMN end_reason TEXT NOT NULL DEFAULT '';
+PRAGMA user_version = 3;
 SQL);
             });
             return;
@@ -133,6 +160,7 @@ CREATE TABLE IF NOT EXISTS matches (
     started_at INTEGER NULL,
     ended_at INTEGER NULL,
     winner_country_id TEXT NULL,
+    end_reason TEXT NOT NULL DEFAULT '',
     FOREIGN KEY(winner_country_id) REFERENCES countries(id) ON DELETE SET NULL
 );
 CREATE INDEX IF NOT EXISTS idx_matches_state ON matches(state);
@@ -190,7 +218,26 @@ CREATE TABLE IF NOT EXISTS statistics (
     territories_claimed INTEGER NOT NULL DEFAULT 0,
     updated_at INTEGER NOT NULL
 );
-PRAGMA user_version = 2;
+CREATE TABLE IF NOT EXISTS country_invitations (
+    id TEXT PRIMARY KEY,
+    country_id TEXT NOT NULL,
+    target_player TEXT NOT NULL,
+    inviter_name TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING',
+    created_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL,
+    responded_at INTEGER NULL,
+    FOREIGN KEY(country_id) REFERENCES countries(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_country_invitations_target ON country_invitations(target_player, status, expires_at);
+CREATE TABLE IF NOT EXISTS research_queue (
+    country_id TEXT PRIMARY KEY,
+    technology_id TEXT NOT NULL,
+    started_at INTEGER NOT NULL,
+    completes_at INTEGER NOT NULL,
+    FOREIGN KEY(country_id) REFERENCES countries(id) ON DELETE CASCADE
+);
+PRAGMA user_version = 3;
 SQL;
         $this->transaction(function() use($sql) : void{
             $this->runExec($sql);

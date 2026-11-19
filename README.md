@@ -2,7 +2,7 @@
 
 OpenFrontMC is an original multiplayer territorial strategy game mode for Minecraft Bedrock servers running PocketMine-MP API 5. It uses abstract strategy-game rules, server-authoritative decisions, and persistent SQLite state.
 
-> **Release status: development MVP (0.3.0), not production-certified.** This release adds resumable physical terrain rendering to the deterministic territory map. The game still needs additional match isolation, win-condition evaluation, player roles/invitations, physical building structures, research queues, and full Bedrock UI before it can be considered production-complete.
+> **Release status: development MVP (0.3.0), not production-certified.** This release adds resumable physical terrain rendering to the deterministic territory map. The game still needs additional match isolation, win-condition evaluation, physical building structures, full Bedrock UI before it can be considered production-complete.
 
 ## Requirements
 
@@ -60,15 +60,15 @@ Territory coordinates are zero-based territory-grid coordinates, not block coord
 - openfront.admin — administrative commands (default op)
 - openfront.admin.build — block build/break override in managed worlds (default op)
 
-## Gameplay systems in 0.3.0
+## Gameplay systems in 0.4.0
 
 ### Countries and territories
 
-Countries are created by players, receive configured starting resources, and are stored with their leader/member record. Territory ownership is determined on the server and persisted with a history event and country score update. Claiming checks country membership, map bounds, terrain type, prior ownership, adjacency, and sufficient gold in one SQLite transaction.
+Countries are created by players, receive configured starting resources, and are stored with their leader/member record. Leaders and officers can issue expiring invitations; only the named player can accept or reject them. Leaders can rename and recolor a country, assign officer roles, remove eligible members, and transfer leadership. Leadership transfer and invitation acceptance are transactional. Territory ownership is determined on the server and persisted with a history event and country score update. Claiming checks country membership, map bounds, terrain type, prior ownership, adjacency, and sufficient gold in one SQLite transaction.
 
 ### Economy
 
-Countries own six resources: gold, food, materials, energy, research, and influence. Resource changes are normalized, capacity-limited, checked against negative balances, and logged to economy_transactions. Periodic configured income and building production are applied by a PocketMine scheduler task on the main thread.
+Countries can transfer configured resource amounts to other countries through an atomic, capacity-checked transaction. Both sides receive an auditable economy transaction record. Countries own six resources: gold, food, materials, energy, research, and influence. Resource changes are normalized, capacity-limited, checked against negative balances, and logged to economy_transactions. Periodic configured income and building production are applied by a PocketMine scheduler task on the main thread.
 
 ### Buildings
 

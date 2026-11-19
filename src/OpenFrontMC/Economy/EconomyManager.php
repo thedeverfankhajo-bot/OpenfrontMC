@@ -67,6 +67,43 @@ final class EconomyManager{
         });
     }
 
+    /**
+     * Transfers resources between countries in one transaction. A transfer is rejected
+     * if it would exceed the recipient's per-resource storage capacity.
+     *
+     * @param array<string, int|float|string> $amounts
+     */
+    public function transfer(string $fromCountryId, string $toCountryId, string $actor, array $amounts) : void{
+        if($fromCountryId === $toCountryId){
+            throw new RuntimeException("A country cannot trade resources with itself.");
+        }
+        $amounts = EconomyRules::normalizeAmounts($amounts);
+        if($amounts === [] || array_sum($amounts) <= 0){
+            throw new RuntimeException("A transfer must contain a positive resource amount.");
+        }
+        $capacity = max(1, min(1000000000, (int) ($this->config["capacity"] ?? 100000)));
+        $this->database->transaction(function() use($fromCountryId, $toCountryId, $actor, $amounts, $capacity) : void{
+            $source = $this->database->fetchOne("SELECT * FROM resources WHERE country_id=?", [$fromCountryId]);
+            $target = $this->database->fetchOne("SELECT * FROM resources WHERE country_id=?", [$toCountryId]);
+            if($source === null || $target === null){
+                throw new RuntimeException("Both countries must have an economy before trading.");
+            }
+            foreach($amounts as $resource => $amount){
+                if((int) $target[$resource] + $amount > $capacity){
+                    throw new RuntimeException("The receiving country lacks enough " . $resource . " storage capacity.");
+                }
+            }
+            $debit = [];
+            foreach($amounts as $resource => $amount){
+                $debit[$resource] = -$amount;
+            }
+            $sourceNext = EconomyRules::apply($source, $debit, $capacity);
+            $targetNext = EconomyRules::apply($target, $amounts, $capacity);
+            $this->writeBalances($fromCountryId, $actor, "TRADE_OUT:" . $toCountryId, $debit, $sourceNext);
+            $this->writeBalances($toCountryId, $actor, "TRADE_IN:" . $fromCountryId, $amounts, $targetNext);
+        });
+    }
+
     public function accrueIncome() : void{
         $income = $this->config["income_per_period"] ?? [];
         if(!is_array($income) || $income === []){

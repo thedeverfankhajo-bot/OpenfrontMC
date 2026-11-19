@@ -10,7 +10,7 @@ The plugin creates or loads openfront_lobby and openfront_world. It does not rep
 
 ## Economy and game data
 
-Use the config file to tune map seed, territory-grid size, claim cost, starting resources, resource capacity, income interval, periodic income, diplomacy request limits, treaty durations, match capacity, and countdown. Building costs and production live in buildings/buildings.yml; research costs, prerequisites and effects live in research/technology.yml.
+Use the config file to tune map seed, territory-grid size, claim cost, starting resources, resource capacity, income interval, periodic income, diplomacy request limits, treaty durations, match capacity, and countdown. Country invitations expire automatically; only leaders can rename/recolor or transfer leadership, while leaders and officers can invite. Resource trades are capacity-checked and logged. Research uses one persisted queue per country. Building costs and production live in buildings/buildings.yml; research costs, prerequisites and effects live in research/technology.yml.
 
 A change to map settings affects future map creation only. The current default-map bootstrap does not regenerate an existing map automatically. Do not delete the database to reset a live game without a verified backup.
 
