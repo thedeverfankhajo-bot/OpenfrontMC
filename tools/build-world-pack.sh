@@ -73,7 +73,7 @@ trap cleanup EXIT
 echo "Starting PocketMine-MP API 5 and waiting for map rendering to finish..."
 (
   cd "$SERVER_DIR"
-  bash ./start.sh
+  bash ./start.sh --no-wizard
 ) < "$FIFO" > "$LOG_FILE" 2>&1 &
 SERVER_PID=$!
 exec 9>"$FIFO"
