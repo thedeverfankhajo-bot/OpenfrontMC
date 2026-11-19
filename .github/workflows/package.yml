@@ -42,13 +42,13 @@ jobs:
       - name: Build OpenFrontMC PHAR
         run: bash tools/build-phar.sh dist/OpenFrontMC.phar
 
-      - name: Install official PocketMine-MP API 5 runtime
+      - name: Install maintained Axolotl-PM (PocketMine API 5-compatible)
         run: bash tools/install-pocketmine.sh "$RUNNER_TEMP/pocketmine"
 
       - name: Generate and verify LevelDB world pack
         run: bash tools/build-world-pack.sh "$RUNNER_TEMP/pocketmine" dist
 
-      - name: Package PocketMine-MP runtime
+      - name: Package Axolotl-PM runtime
         run: |
           mkdir -p "$RUNNER_TEMP/pocketmine-runtime/plugins"
           cp "$RUNNER_TEMP/pocketmine/PocketMine-MP.phar" "$RUNNER_TEMP/pocketmine-runtime/"
@@ -56,7 +56,7 @@ jobs:
           cp -a "$RUNNER_TEMP/pocketmine/bin" "$RUNNER_TEMP/pocketmine-runtime/"
           cp dist/OpenFrontMC.phar "$RUNNER_TEMP/pocketmine-runtime/plugins/"
           cp "$RUNNER_TEMP/pocketmine/server.properties" "$RUNNER_TEMP/pocketmine-runtime/"
-          tar -czf dist/PocketMine-MP-API5-Linux-x86_64.tar.gz -C "$RUNNER_TEMP/pocketmine-runtime" .
+          tar -czf dist/Axolotl-PM-API5-Linux-x86_64.tar.gz -C "$RUNNER_TEMP/pocketmine-runtime" .
 
       - name: Upload installable artifacts
         uses: actions/upload-artifact@v4
