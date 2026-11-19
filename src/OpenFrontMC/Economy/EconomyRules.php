@@ -12,7 +12,7 @@ final class EconomyRules{
     public const RESOURCES = ["gold", "food", "materials", "energy", "research", "influence"];
 
     /**
-     * @param array<string, int|float> $balance
+     * @param array<string, int|float|string> $balance
      * @param array<string, int|float> $delta
      * @return array<string, int>
      */
@@ -96,7 +96,7 @@ final class EconomyRules{
     }
 
     /**
-     * @param array<string, int|float> $balance
+     * @param array<string, int|float|string> $balance
      * @param array<string, int|float> $cost
      */
     public static function canAfford(array $balance, array $cost) : bool{
