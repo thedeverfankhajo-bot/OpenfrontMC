@@ -1,0 +1,9 @@
+parameters:
+  level: 6
+  paths:
+    - src/OpenFrontMC/Security/InputValidator.php
+    - src/OpenFrontMC/Economy/EconomyRules.php
+    - src/OpenFrontMC/World/MapGenerator.php
+    - src/OpenFrontMC/Match/MatchState.php
+    - src/OpenFrontMC/Match/MatchStateMachine.php
+  tmpDir: .phpstan-cache

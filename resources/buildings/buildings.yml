@@ -1,0 +1,6 @@
+buildings:
+  capital: {cost: {gold: 0}, production: {gold: 2, influence: 1}}
+  farm: {cost: {gold: 15, materials: 5}, production: {food: 5}}
+  factory: {cost: {gold: 25, materials: 15}, production: {materials: 4}}
+  research_center: {cost: {gold: 30, materials: 10, energy: 5}, production: {research: 3}}
+  energy_plant: {cost: {gold: 20, materials: 10}, production: {energy: 4}}

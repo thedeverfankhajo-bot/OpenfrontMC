@@ -1,0 +1,4 @@
+prefix: "§6[OpenFrontMC] §r"
+protected-world: "This world is protected."
+country-created: "Your country has been founded."
+not-in-country: "You are not a member of a country."

@@ -1,0 +1,22 @@
+name: OpenFrontMC
+main: OpenFrontMC\Main
+version: 0.1.0
+api: [5.0.0]
+author: OpenFrontMC contributors
+description: A server-authoritative territorial strategy game mode for Minecraft Bedrock.
+website: https://github.com/thedeverfankhajo-bot/OpenfrontMC
+commands:
+  openfront:
+    description: OpenFrontMC game commands
+    usage: "/openfront help"
+    permission: openfront.command
+permissions:
+  openfront.command:
+    description: Allows access to OpenFrontMC player commands.
+    default: true
+  openfront.admin:
+    description: Allows management of OpenFrontMC matches and settings.
+    default: op
+  openfront.admin.build:
+    description: Allows building in plugin-managed OpenFrontMC worlds.
+    default: op

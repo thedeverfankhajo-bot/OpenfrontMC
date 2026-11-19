@@ -2,45 +2,42 @@
 
 OpenFrontMC is an original multiplayer territorial strategy game mode for Minecraft Bedrock servers running PocketMine-MP API 5.
 
-> **Development status:** initial implementation is being established. Features are documented as available only when they are implemented and tested.
-
-## Goals
-
-- Dedicated, plugin-managed lobby and match worlds.
-- Seeded procedural maps represented by server-authoritative territories.
-- Persistent countries, economy, buildings, research, diplomacy, matches, and statistics.
-- Secure commands and event-driven gameplay with API 5 only.
-- English and Persian localization.
+> **Status: early MVP foundation (0.1.0).** Country creation, deterministic territory metadata generation, SQLite persistence, resource balances, match membership/state transitions, managed world loading, and basic block protection are implemented. This is not yet the complete game described in the roadmap.
 
 ## Requirements
-
-- PocketMine-MP with API 5
-- PHP version required by the installed PocketMine-MP release
-- PHP SQLite3 support
+- PocketMine-MP API 5
+- PHP 8.1+
+- PHP SQLite3 extension
+- Composer for development and analysis
 
 ## Installation
-
-1. Download the release PHAR (when published).
-2. Place it in the server's `plugins/` directory.
+1. Build a PHAR with PocketMine DevTools or a compatible build pipeline.
+2. Put the PHAR in the server's `plugins/` directory.
 3. Start PocketMine-MP and review `plugin_data/OpenFrontMC/config.yml`.
-4. Use `/openfront help` in game.
+4. Use `/openfront help`.
 
-## Documentation
+## Commands
+- `/openfront help`
+- `/openfront country create <name> <TAG>`
+- `/openfront country`
+- `/openfront map`
+- `/openfront economy`
+- `/openfront join`
+- `/openfront leave`
+- `/openfront stats`
+- `/openfront top`
+- `/openfront admin status|reload`
 
-- [Player guide](docs/PLAYER_GUIDE.md)
-- [Server administrator guide](docs/ADMIN_GUIDE.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Security model](docs/SECURITY.md)
-- [Testing](docs/TESTING.md)
+## Permissions
+- `openfront.command` — player commands (default true)
+- `openfront.admin` — admin commands (default op)
+- `openfront.admin.build` — build in managed worlds (default op)
+
+## Worlds and persistence
+The plugin creates or loads `openfront_lobby` and `openfront_world` through PocketMine's WorldManager. It never changes the server's default world. SQLite uses prepared statements, foreign keys, WAL mode, and transactions. Back up the plugin data directory and both managed world folders before maintenance.
+
+## Development status
+The map generator currently creates deterministic territory metadata; automatic terrain rendering is not enabled. Buildings, active research, diplomacy workflows, complete UI, scheduled income, and automated match lifecycle remain roadmap items. See [Architecture](docs/ARCHITECTURE.md), [Player guide](docs/PLAYER_GUIDE.md), [Admin guide](docs/ADMIN_GUIDE.md), [Security](docs/SECURITY.md), and [Testing](docs/TESTING.md).
 
 ## License
-
 MIT. See [LICENSE](LICENSE).
-
-## Compatibility
-
-The plugin manifest targets PocketMine-MP API 5. Compatibility is determined by the APIs actually used and the automated checks; the API declaration alone is not a compatibility guarantee.
-
-## Bug reports
-
-Please include the OpenFrontMC version, PocketMine-MP version, PHP version, relevant sanitized logs, and concise reproduction steps. Never publish access tokens, passwords, player credentials, or private server data.

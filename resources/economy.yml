@@ -1,0 +1,2 @@
+capacity: 100000
+income_per_period: {gold: 5, food: 3, materials: 2, energy: 1, research: 1, influence: 1}

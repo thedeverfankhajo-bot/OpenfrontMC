@@ -1,0 +1,24 @@
+world:
+  lobby: openfront_lobby
+  match: openfront_world
+map:
+  seed: 20261119
+  width: 16
+  height: 16
+  continent-count: 4
+  island-count: 18
+  water-ratio: 0.58
+territory:
+  block-size: 16
+  claim-cost: 25
+economy:
+  capacity: 100000
+  income_per_period: {gold: 5, food: 3, materials: 2, energy: 1, research: 1, influence: 1}
+match:
+  capacity: 16
+  minimum-players: 2
+  countdown-seconds: 20
+performance:
+  map-tiles-per-tick: 32
+  max-operations-per-tick: 64
+language: en_US
