@@ -34,4 +34,4 @@ Only the target country can accept or reject a pending offer. Active timed treat
 
 ## Matches
 
-Use /openfront join to join or create the current waiting match, /openfront ready to mark yourself ready, and /openfront leave to return to the lobby. The current build has one shared match world; it does not yet provide multiple isolated arenas, full team assignment, reconnect restoration, or automatic victory rules.
+Use /openfront join to join or create the current waiting match, /openfront ready to mark yourself ready, and /openfront leave to return to the lobby. The current build has one shared match world; it does not yet provide multiple isolated arenas, full team assignment, or automatic victory rules. Your match membership is retained if you disconnect and is restored to the match-world spawn when you rejoin.

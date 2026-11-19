@@ -122,6 +122,14 @@ try{
     $database = new Database($databasePath);
     $database->migrate();
     $assert((int) ($database->fetchOne("PRAGMA user_version")["user_version"] ?? 0) === 2, "database migration version");
+    $backupPath = $databasePath . ".backup";
+    $database->backup($backupPath);
+    $backupDatabase = new SQLite3($backupPath, SQLITE3_OPEN_READONLY);
+    $assert($backupDatabase->querySingle("PRAGMA integrity_check") === "ok", "online database backup integrity");
+    $backupDatabase->close();
+    if(is_file($backupPath)){
+        @unlink($backupPath);
+    }
     $database->migrate();
     $assert((int) ($database->fetchOne("PRAGMA user_version")["user_version"] ?? 0) === 2, "database migration is idempotent");
     $renderTable = $database->fetchOne("SELECT name FROM sqlite_master WHERE type='table' AND name='rendered_territories'");

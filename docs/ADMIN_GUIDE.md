@@ -2,11 +2,11 @@
 
 ## Requirements and installation
 
-OpenFrontMC 0.2.0 targets PocketMine-MP API 5 and PHP 8.1+ with SQLite3 enabled. Build a PHAR using PocketMine DevTools or a compatible build pipeline, place it in plugins, and restart the server. Review plugin_data/OpenFrontMC/config.yml, buildings/buildings.yml, and research/technology.yml.
+OpenFrontMC 0.3.0 targets PocketMine-MP API 5 and PHP 8.1+ with SQLite3 enabled. Build a PHAR using PocketMine DevTools or a compatible build pipeline, place it in plugins, and restart the server. Review plugin_data/OpenFrontMC/config.yml, buildings/buildings.yml, and research/technology.yml.
 
 ## Managed worlds and backups
 
-The plugin creates or loads openfront_lobby and openfront_world. It does not replace or modify the server default world. The strategy grid is persisted in SQLite; terrain painting is not yet enabled. Back up plugin_data/OpenFrontMC and both managed world folders before maintenance. Stop the server before copying SQLite database and WAL files.
+The plugin creates or loads openfront_lobby and openfront_world. It does not replace or modify the server default world. The strategy grid is persisted in SQLite and rendered incrementally on a raised board in the managed match world. SQLite online backups are created every six hours by default, with the seven newest snapshots retained. Back up both managed world folders separately before maintenance.
 
 ## Economy and game data
 
@@ -29,4 +29,4 @@ openfront.admin defaults to operators. Grant it only to trusted server administr
 
 ## Safety and operations
 
-Test configuration changes on a disposable server first. Monitor the server log for scheduled-economy or database errors. Keep PocketMine-MP and PHP up to date. The current release is a development MVP: it has no live terrain renderer, no isolated simultaneous arenas, no full movement/teleport boundary enforcement, and no automatic victory-condition evaluator. Do not advertise it as a finished competitive game mode.
+Test configuration changes on a disposable server first. Monitor the server log for scheduled-economy or database errors. Keep PocketMine-MP and PHP up to date. The current release is a development MVP: it has no isolated simultaneous arenas, no full movement/teleport boundary enforcement, and no automatic victory-condition evaluator. Player match membership is retained during disconnects and restored to the match-world spawn on reconnect. Do not advertise it as a finished competitive game mode.

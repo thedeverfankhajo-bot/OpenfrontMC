@@ -119,6 +119,25 @@ final class MatchManager{
         );
     }
 
+    /**
+     * Returns the persisted active match membership for a player.
+     * Disconnected players retain their seat until they explicitly leave or the match finishes.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function forPlayer(string $player) : ?array{
+        return $this->database->fetchOne(
+            "SELECT m.*,mp.ready AS player_ready,mp.joined_at AS player_joined_at
+             FROM match_players mp
+             INNER JOIN matches m ON m.id=mp.match_id
+             WHERE mp.player_name=? AND mp.left_at IS NULL
+               AND m.state IN ('WAITING','COUNTDOWN','RUNNING','PAUSED')
+             ORDER BY mp.joined_at DESC
+             LIMIT 1",
+            [$player]
+        );
+    }
+
     public function readyCount(string $matchId) : int{
         $row = $this->database->fetchOne(
             "SELECT COUNT(*) AS amount FROM match_players WHERE match_id=? AND left_at IS NULL AND ready=1",

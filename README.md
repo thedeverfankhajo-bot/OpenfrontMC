@@ -98,7 +98,7 @@ Changing map generation settings does not overwrite an existing persisted map. B
 
 ## Persistence and backups
 
-SQLite uses prepared statements, foreign keys, WAL mode, busy timeout, and explicit transactions. Terrain-render progress is stored per territory, and completed terrain is not rebuilt on ordinary restarts. Back up the entire plugin_data/OpenFrontMC folder and both managed world folders before upgrades or maintenance. Stop the server before copying a SQLite database together with its WAL files.
+SQLite uses prepared statements, foreign keys, WAL mode, busy timeout, and explicit transactions. Terrain-render progress is stored per territory, and completed terrain is not rebuilt on ordinary restarts. A consistent SQLite online backup is created every six hours by default; the seven newest database snapshots are retained. Managed world folders still require separate backups.
 
 ## Development and tests
 
@@ -108,7 +108,7 @@ The unit suite includes a SQLite-backed service integration test. Tests against 
 
 ## Known limitations
 
-This is a development MVP, not a production-ready public-server release. The terrain board currently renders region-level land/water surfaces rather than detailed mountains, coastlines, or biome decoration. It does not yet provide physical building structures, research timers, multiple isolated matches, full victory-condition evaluation, player reconnection restoration, inventory-form UI, complete teleport/arena boundary enforcement, or a PocketMine server integration test harness. Admin controls are intentionally narrow. Deploy to a test server first, review permissions, and keep verified backups.
+This is a development MVP, not a production-ready public-server release. The terrain board currently renders region-level land/water surfaces rather than detailed mountains, coastlines, or biome decoration. It does not yet provide physical building structures, research timers, multiple isolated matches, full victory-condition evaluation, inventory-form UI, complete teleport/arena boundary enforcement, or a PocketMine server integration test harness. Admin controls are intentionally narrow. Deploy to a test server first, review permissions, and keep verified backups.
 
 ## Documentation
 

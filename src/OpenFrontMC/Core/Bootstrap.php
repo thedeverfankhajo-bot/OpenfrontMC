@@ -108,6 +108,28 @@ final class Bootstrap{
         $pluginManager->registerEvents(new WorldProtectionListener($worlds), $this->plugin);
         $pluginManager->registerEvents(new PlayerSessionListener($matches, $worlds), $this->plugin);
 
+        $backupIntervalHours = max(1, min(168, (int) $this->plugin->getConfig()->getNested("storage.backup-interval-hours", 6)));
+        $this->plugin->getScheduler()->scheduleRepeatingTask(new ClosureTask(function() : void{
+            try{
+                $backupDirectory = $this->plugin->getDataFolder() . "backups/";
+                $backupPath = $backupDirectory . "openfront-" . date("Ymd-His") . ".sqlite3";
+                $this->database->backup($backupPath);
+
+                $backups = glob($backupDirectory . "openfront-*.sqlite3");
+                if(is_array($backups)){
+                    rsort($backups, SORT_STRING);
+                    foreach(array_slice($backups, 7) as $obsolete){
+                        if(is_file($obsolete) && !is_link($obsolete)){
+                            @unlink($obsolete);
+                        }
+                    }
+                }
+                $this->plugin->getLogger()->debug("OpenFrontMC database backup completed.");
+            }catch(Throwable $e){
+                $this->plugin->getLogger()->warning("OpenFrontMC database backup failed: " . $e->getMessage());
+            }
+        }), $backupIntervalHours * 3600 * 20);
+
         $periodSeconds = max(30, min(3600, (int) ($economyConfig["period-seconds"] ?? 120)));
         $this->plugin->getScheduler()->scheduleRepeatingTask(new ClosureTask(function() use($economy, $buildings, $research, $diplomacy) : void{
             try{

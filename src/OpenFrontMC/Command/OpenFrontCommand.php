@@ -168,6 +168,10 @@ final class OpenFrontCommand{
         if($rawX === null || $rawZ === null || preg_match('/^[0-9]{1,3}$/', $rawX) !== 1 || preg_match('/^[0-9]{1,3}$/', $rawZ) !== 1){
             throw new RuntimeException("Usage: /openfront claim <x> <z>");
         }
+        $match = $this->matches->forPlayer($sender->getName());
+        if($match === null || $match["state"] !== MatchState::RUNNING->value){
+            throw new RuntimeException("You must be in a running match to claim territory.");
+        }
         $country = $this->requireCountry($sender);
         $cost = max(0, (int) $this->plugin->getConfig()->getNested("territory.claim-cost", 25));
         $this->territories->claim($sender->getName(), (string) $country["id"], (int) $rawX, (int) $rawZ, $cost);
@@ -333,6 +337,16 @@ final class OpenFrontCommand{
         if(!$this->terrainRenderer->isReady()){
             $failure = $this->terrainRenderer->getFailure();
             throw new RuntimeException($failure ?? "The strategy map is still being generated. Please try again shortly.");
+        }
+        $existingMembership = $this->matches->forPlayer($sender->getName());
+        if($existingMembership !== null){
+            $sender->teleport($this->worlds->getMatchWorld()->getSpawnLocation());
+            $sender->sendMessage($this->language->get("joined-match", ["id" => $existingMembership["id"]]));
+            return;
+        }
+        $activeMatch = $this->matches->latestActive();
+        if($activeMatch !== null && in_array($activeMatch["state"], [MatchState::COUNTDOWN->value, MatchState::RUNNING->value, MatchState::PAUSED->value], true)){
+            throw new RuntimeException("A match is already in progress. Please wait until it finishes.");
         }
         if(!$this->rateLimiter->allow($sender->getName() . ":join", 2.0)){
             throw new RuntimeException("Please wait before joining a match again.");

@@ -14,8 +14,10 @@ use Throwable;
 final class Database{
 
     private SQLite3 $sqlite;
+    private string $path;
 
     public function __construct(string $path){
+        $this->path = $path;
         $directory = dirname($path);
         if(!is_dir($directory) && !@mkdir($directory, 0775, true) && !is_dir($directory)){
             throw new RuntimeException("Unable to create the plugin data directory.");
@@ -263,6 +265,50 @@ SQL;
             }catch(Throwable){
             }
             throw $e;
+        }
+    }
+
+    /**
+     * Creates a consistent SQLite snapshot using the online backup API.
+     * The destination is written to a unique temporary file and atomically renamed.
+     */
+    public function backup(string $destinationPath) : void{
+        if($destinationPath === "" || str_contains($destinationPath, "\0") || $destinationPath === $this->path){
+            throw new RuntimeException("Invalid database backup destination.");
+        }
+
+        $directory = dirname($destinationPath);
+        if(!is_dir($directory) && !@mkdir($directory, 0700, true) && !is_dir($directory)){
+            throw new RuntimeException("Unable to create the database backup directory.");
+        }
+
+        $temporaryPath = $destinationPath . ".tmp-" . bin2hex(random_bytes(8));
+        $destination = null;
+        try{
+            $destination = new SQLite3($temporaryPath, SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE);
+            $destination->busyTimeout(5000);
+            if(!$this->sqlite->backup($destination)){
+                throw new RuntimeException("SQLite online backup operation failed.");
+            }
+            if($destination->querySingle("PRAGMA integrity_check") !== "ok"){
+                throw new RuntimeException("SQLite backup integrity check failed.");
+            }
+            $destination->close();
+            $destination = null;
+
+            @chmod($temporaryPath, 0600);
+            if(!@rename($temporaryPath, $destinationPath)){
+                throw new RuntimeException("Unable to publish the completed database backup.");
+            }
+            @chmod($destinationPath, 0600);
+        }catch(Throwable $e){
+            if($destination instanceof SQLite3){
+                $destination->close();
+            }
+            if(is_file($temporaryPath)){
+                @unlink($temporaryPath);
+            }
+            throw new RuntimeException("SQLite backup failed: " . $e->getMessage(), 0, $e);
         }
     }
 
