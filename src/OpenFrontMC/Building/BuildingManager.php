@@ -52,7 +52,7 @@ final class BuildingManager{
 
         $id = bin2hex(random_bytes(8));
         $cost = $this->cost($definition["cost"] ?? []);
-        $this->economy->applyAtomic($countryId, $actor, "BUILD:" . strtoupper($type), $cost, function() use($id, $countryId, $territoryId, $type) : void{
+        $this->economy->applyAtomic($countryId, $actor, "BUILD:" . strtoupper($type), $cost, function() use($id, $countryId, $territoryId, $type, $actor) : void{
             $now = time();
             $this->database->execute(
                 "INSERT INTO buildings(id,country_id,territory_id,type,level,created_at) VALUES(?,?,?,?,1,?)",
