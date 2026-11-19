@@ -117,6 +117,7 @@ This is a development MVP, not a production-ready public-server release. The ter
 - Server administrator guide: docs/ADMIN_GUIDE.md
 - Security notes: docs/SECURITY.md
 - Testing guide: docs/TESTING.md
+- PocketMine API 5 packaging and LevelDB world packs: docs/PACKAGING.md
 
 ## Bug reports
 
