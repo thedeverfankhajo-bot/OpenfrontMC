@@ -13,6 +13,7 @@ territory:
   claim-cost: 25
 economy:
   capacity: 100000
+  starting: {gold: 100, food: 80, materials: 60, energy: 30, research: 0, influence: 10}
   income_per_period: {gold: 5, food: 3, materials: 2, energy: 1, research: 1, influence: 1}
 match:
   capacity: 16

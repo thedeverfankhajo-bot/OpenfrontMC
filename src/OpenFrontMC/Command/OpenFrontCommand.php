@@ -17,8 +17,9 @@ final class OpenFrontCommand{
         $sub=strtolower($args[0]??"help");
         try{
             switch($sub){
-                case "help":$sender->sendMessage("§6OpenFrontMC §7| country create <name> <TAG>, map, economy, join, leave, stats, top, admin");break;
+                case "help":$sender->sendMessage("§6OpenFrontMC §7| country create <name> <TAG>, claim <x> <z>, map, economy, join, leave, stats, top, admin");break;
                 case "country":$this->country($sender,array_slice($args,1));break;
+                case "claim":$this->claim($sender,$args[1]??null,$args[2]??null);break;
                 case "map":$sender->sendMessage("§aTerritory records: ".count($this->territories->all()));break;
                 case "economy":$this->economyInfo($sender);break;
                 case "join":$this->join($sender);break;
@@ -30,6 +31,14 @@ final class OpenFrontCommand{
                 default:$sender->sendMessage("§cUnknown subcommand. Use /openfront help.");
             }
         }catch(Throwable $e){$sender->sendMessage("§cOpenFrontMC: ".$e->getMessage());}
+    }
+    private function claim(CommandSender $sender,?string $rawX,?string $rawZ):void{
+        if(!$sender instanceof Player){$sender->sendMessage("Players only.");return;}
+        if($rawX===null||$rawZ===null||preg_match('/^[0-9]{1,3}$/',$rawX)!==1||preg_match('/^[0-9]{1,3}$/',$rawZ)!==1){$sender->sendMessage("§cUsage: /openfront claim <x> <z>");return;}
+        $country=$this->countries->byPlayer($sender->getName());if($country===null){$sender->sendMessage("§cCreate a country first.");return;}
+        $cost=max(0,(int)$this->plugin->getConfig()->getNested("territory.claim-cost",25));
+        $this->territories->claim($sender->getName(),(string)$country["id"],(int)$rawX,(int)$rawZ,$cost);
+        $sender->sendMessage("§aTerritory claimed.");
     }
     /** @param string[] $args */
     private function country(CommandSender $sender,array $args):void{
