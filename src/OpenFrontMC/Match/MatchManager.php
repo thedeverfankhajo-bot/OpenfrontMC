@@ -92,6 +92,61 @@ final class MatchManager{
         });
     }
 
+    /**
+     * Finishes a match, records its result and closes active player seats atomically.
+     */
+    public function finishWithWinner(string $matchId, ?string $countryId, string $reason) : void{
+        if(preg_match('/^[A-Z0-9_:-]{1,64}$/', $reason) !== 1){
+            throw new RuntimeException("Invalid match end reason.");
+        }
+
+        $this->database->transaction(function() use($matchId, $countryId, $reason) : void{
+            $match = $this->database->fetchOne("SELECT state FROM matches WHERE id=?", [$matchId]);
+            if($match === null){
+                throw new RuntimeException("Match not found.");
+            }
+            (new MatchStateMachine())->transition(MatchState::from((string) $match["state"]), MatchState::FINISHED);
+
+            if($countryId !== null && $this->database->fetchOne(
+                "SELECT cm.country_id
+                 FROM match_players mp
+                 INNER JOIN country_members cm ON cm.player_name=mp.player_name
+                 WHERE mp.match_id=? AND cm.country_id=?
+                 LIMIT 1",
+                [$matchId, $countryId]
+            ) === null){
+                throw new RuntimeException("The winning country did not participate in this match.");
+            }
+
+            $now = time();
+            $this->database->execute(
+                "UPDATE matches SET state='FINISHED',winner_country_id=?,end_reason=?,ended_at=? WHERE id=?",
+                [$countryId, $reason, $now, $matchId]
+            );
+            $this->database->execute(
+                "UPDATE match_players SET left_at=? WHERE match_id=? AND left_at IS NULL",
+                [$now, $matchId]
+            );
+
+            if($countryId !== null){
+                $this->database->execute(
+                    "UPDATE statistics SET matches_won=matches_won+1,updated_at=?
+                     WHERE player_name IN (
+                         SELECT mp.player_name FROM match_players mp
+                         INNER JOIN country_members cm ON cm.player_name=mp.player_name
+                         WHERE mp.match_id=? AND cm.country_id=?
+                     )",
+                    [$now, $matchId, $countryId]
+                );
+            }
+
+            $this->database->execute(
+                "INSERT INTO game_history(actor_name,action,subject_id,details_json,created_at) VALUES('SYSTEM','MATCH_FINISHED',?,?,?)",
+                [$matchId, json_encode(["winner_country_id" => $countryId, "reason" => $reason], JSON_THROW_ON_ERROR), $now]
+            );
+        });
+    }
+
     public function setWinner(string $matchId, ?string $countryId) : void{
         $this->database->execute("UPDATE matches SET winner_country_id=? WHERE id=? AND state='FINISHED'", [$countryId, $matchId]);
     }

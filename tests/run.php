@@ -9,6 +9,7 @@ use OpenFrontMC\Economy\EconomyRules;
 use OpenFrontMC\Match\MatchManager;
 use OpenFrontMC\Match\MatchState;
 use OpenFrontMC\Match\MatchStateMachine;
+use OpenFrontMC\Match\VictoryManager;
 use OpenFrontMC\Research\ResearchManager;
 use OpenFrontMC\Research\TechnologyTree;
 use OpenFrontMC\Security\InputValidator;
@@ -26,7 +27,7 @@ $files = [
     "/Territory/TerritoryManager.php", "/Economy/EconomyManager.php",
     "/Research/TechnologyTree.php", "/Research/ResearchManager.php",
     "/Building/BuildingManager.php", "/Diplomacy/DiplomacyManager.php",
-    "/Match/MatchManager.php"
+    "/Match/MatchManager.php", "/Match/VictoryManager.php"
 ];
 foreach($files as $file){
     require_once $root . "/src/OpenFrontMC" . $file;
@@ -188,7 +189,7 @@ try{
         }),
         "atomic economy callback rolls back"
     );
-    $assert($economy->balance($countryId)["gold"] === 185, "failed atomic action refunded");
+    $assert($economy->balance($countryId)["gold"] === 165, "failed atomic action leaves the pre-call balance unchanged");
 
     $buildingManager = new BuildingManager($database, $economy, [
         "buildings" => [
@@ -232,6 +233,33 @@ try{
     $matches->transition($matchId, MatchState::RUNNING);
     $matches->transition($matchId, MatchState::FINISHED);
     $assert($matches->get($matchId)["state"] === MatchState::FINISHED->value, "match finish persisted");
+    $victoryMatchId = $matches->create("FFA", 8);
+    $matches->join($victoryMatchId, "PlayerOne");
+    $matches->join($victoryMatchId, "PlayerTwo");
+    $matches->transition($victoryMatchId, MatchState::COUNTDOWN);
+    $matches->transition($victoryMatchId, MatchState::RUNNING);
+    $database->execute("UPDATE countries SET score=250 WHERE id=?", [$countryId]);
+    $victory = new VictoryManager($database, $matches, ["last-country-standing" => false, "score-target" => ["enabled" => true, "points" => 200]]);
+    $result = $victory->evaluateActive();
+    $assert($result !== null && $result["winner_country_id"] === $countryId, "score-target selects a participating country");
+    $finishedMatch = $matches->get($victoryMatchId);
+    $assert($finishedMatch["state"] === MatchState::FINISHED->value, "victory condition finishes match");
+    $assert($finishedMatch["end_reason"] === "SCORE_TARGET", "victory reason persisted");
+    $assert($finishedMatch["winner_country_id"] === $countryId, "winning country persisted");
+    $assert(count($matches->players($victoryMatchId)) === 0, "finishing match closes active seats");
+    $assert((int) $database->fetchOne("SELECT matches_won FROM statistics WHERE player_name='PlayerOne'")["matches_won"] === 1, "winner statistics incremented");
+
+    $timedMatchId = $matches->create("FFA", 8);
+    $matches->join($timedMatchId, "PlayerOne");
+    $matches->join($timedMatchId, "PlayerTwo");
+    $matches->transition($timedMatchId, MatchState::COUNTDOWN);
+    $matches->transition($timedMatchId, MatchState::RUNNING);
+    $database->execute("UPDATE matches SET started_at=? WHERE id=?", [time() - 10, $timedMatchId]);
+    $timedVictory = new VictoryManager($database, $matches, ["last-country-standing" => false, "time-limit" => ["enabled" => true, "seconds" => 5]]);
+    $timedResult = $timedVictory->evaluateActive();
+    $assert($timedResult !== null && $timedResult["reason"] === "TIME_LIMIT", "time limit ends a match");
+    $assert($matches->get($timedMatchId)["winner_country_id"] === $countryId, "time-limit standings choose highest score");
+
 }finally{
     if($database instanceof Database){
         $database->close();

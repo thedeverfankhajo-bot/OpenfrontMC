@@ -13,7 +13,7 @@ OpenFrontMC is a modular PocketMine-MP API 5 plugin. The command/UI layer delega
 - Building: database-backed building records, location ownership, limits, levels, upgrade, demolition, and production calculations.
 - Research: validated acyclic technology tree, prerequisites, resource costs, unlock persistence, and production modifiers.
 - Diplomacy: treaty offer/respond/end/expiry workflow with per-country request throttling and history.
-- Match: persisted match state machine, capacity, one-active-match-per-player rule, ready flags, and same-match rejoin.
+- Match: persisted state machine, capacity, one-active-match-per-player rule, ready flags, same-match rejoin, atomic result persistence, and configurable victory evaluation.
 - Language: English/Persian YAML localization.
 - Security: input validation and action rate limiter.
 - Storage: SQLite schema and transaction boundary.
@@ -24,11 +24,11 @@ World and player operations remain on PocketMine main thread. Periodic game econ
 
 ## World and map model
 
-The plugin loads or creates the managed worlds openfront_lobby and openfront_world using PocketMine public WorldManager API and WorldCreationOptions. The map generator emits deterministic territory metadata keyed by the configured seed. Default territory grid is 16×16 with 16 blocks per territory, describing a 256×256 strategic map. The current implementation does not yet paint physical terrain into the world or visualize building records as block structures.
+The plugin loads or creates the managed worlds openfront_lobby and openfront_world using PocketMine public WorldManager API and WorldCreationOptions. The map generator emits deterministic territory metadata keyed by the configured seed. Default territory grid is 16×16 with 16 blocks per territory, describing a 256×256 strategic map. The territory board is rendered incrementally in the managed match world through public chunk-population and block-placement APIs; logical building records are not yet visualized as block structures.
 
 ## Security boundaries
 
-Commands check their dedicated permissions; admin actions additionally require openfront.admin. Country identity and membership, map bounds, claim adjacency, terrain, and resource balances are looked up server-side. Players cannot provide country IDs or resource balances to change ownership. Block placement and breaking are cancelled in managed worlds except for actors with openfront.admin.build. This listener is a basic build-protection layer, not a comprehensive anti-cheat or movement boundary.
+Commands check their dedicated permissions; admin actions additionally require openfront.admin. Country identity and membership, map bounds, claim adjacency, terrain, and resource balances are looked up server-side. Players cannot provide country IDs or resource balances to change ownership. Block placement and breaking are cancelled in managed worlds except for actors with openfront.admin.build. This listener is a basic build-protection layer, not a comprehensive anti-cheat or movement boundary. Victory rules run on a scheduled task and use shared campaign country/territory/economy values; per-match state isolation is not yet implemented.
 
 ## Current extension points
 

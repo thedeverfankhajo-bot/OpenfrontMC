@@ -2,7 +2,7 @@
 
 OpenFrontMC is an original multiplayer territorial strategy game mode for Minecraft Bedrock servers running PocketMine-MP API 5. It uses abstract strategy-game rules, server-authoritative decisions, and persistent SQLite state.
 
-> **Release status: development MVP (0.4.0), not production-certified.** This release adds resumable physical terrain rendering to the deterministic territory map. The game still needs additional match isolation, win-condition evaluation, physical building structures, full Bedrock UI before it can be considered production-complete.
+> **Release status: development MVP (0.5.0), not production-certified.** This release adds configurable automatic victory evaluation and persisted match results. Isolated concurrent match state, physical building structures, full Bedrock UI and live PocketMine integration testing remain necessary before production certification.
 
 ## Requirements
 

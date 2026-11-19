@@ -1,6 +1,6 @@
 name: OpenFrontMC
 main: OpenFrontMC\Main
-version: 0.4.0
+version: 0.5.0
 api: [5.0.0]
 author: OpenFrontMC contributors
 description: A server-authoritative territorial strategy game mode for Minecraft Bedrock.

@@ -24,6 +24,27 @@ match:
   capacity: 16
   minimum-players: 2
   countdown-seconds: 20
+  victory:
+    evaluation-interval-seconds: 5
+    last-country-standing: true
+    score-target:
+      enabled: false
+      points: 500
+    territory-control:
+      enabled: true
+      percent: 70
+    special-objectives:
+      enabled: false
+      city-sites: 3
+    research-target:
+      enabled: false
+      technologies: 8
+    economic-target:
+      enabled: false
+      total-resources: 5000
+    time-limit:
+      enabled: true
+      seconds: 1800
 performance:
   map-tiles-per-tick: 1
   map-render-interval-ticks: 4

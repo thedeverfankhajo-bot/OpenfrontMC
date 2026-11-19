@@ -481,7 +481,11 @@ final class OpenFrontCommand{
                 "resume" => MatchState::RUNNING,
                 default => MatchState::FINISHED
             };
-            $this->matches->transition((string) $match["id"], $state);
+            if($action === "stop"){
+                $this->matches->finishWithWinner((string) $match["id"], null, "ADMIN_STOP");
+            }else{
+                $this->matches->transition((string) $match["id"], $state);
+            }
             if($action === "stop"){
                 foreach($this->worlds->getMatchWorld()->getPlayers() as $player){
                     $player->teleport($this->worlds->getLobby()->getSpawnLocation());

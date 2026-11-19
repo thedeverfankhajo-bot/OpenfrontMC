@@ -2,7 +2,7 @@
 
 ## Requirements and installation
 
-OpenFrontMC 0.3.0 targets PocketMine-MP API 5 and PHP 8.1+ with SQLite3 enabled. Build a PHAR using PocketMine DevTools or a compatible build pipeline, place it in plugins, and restart the server. Review plugin_data/OpenFrontMC/config.yml, buildings/buildings.yml, and research/technology.yml.
+OpenFrontMC 0.5.0 targets PocketMine-MP API 5 and PHP 8.1+ with SQLite3 enabled. Build a PHAR using PocketMine DevTools or a compatible build pipeline, place it in plugins, and restart the server. Review plugin_data/OpenFrontMC/config.yml, buildings/buildings.yml, and research/technology.yml.
 
 ## Managed worlds and backups
 
@@ -10,7 +10,7 @@ The plugin creates or loads openfront_lobby and openfront_world. It does not rep
 
 ## Economy and game data
 
-Use the config file to tune map seed, territory-grid size, claim cost, starting resources, resource capacity, income interval, periodic income, diplomacy request limits, treaty durations, match capacity, and countdown. Country invitations expire automatically; only leaders can rename/recolor or transfer leadership, while leaders and officers can invite. Resource trades are capacity-checked and logged. Building costs and production live in buildings/buildings.yml; research costs, prerequisites and effects live in research/technology.yml.
+Use the config file to tune map seed, territory-grid size, claim cost, starting resources, resource capacity, income interval, periodic income, diplomacy request limits, treaty durations, match capacity, countdown, and victory thresholds/time limit. Country invitations expire automatically; only leaders can rename/recolor or transfer leadership, while leaders and officers can invite. Resource trades are capacity-checked and logged. Building costs and production live in buildings/buildings.yml; research costs, prerequisites and effects live in research/technology.yml.
 
 A change to map settings affects future map creation only. The current default-map bootstrap does not regenerate an existing map automatically. Do not delete the database to reset a live game without a verified backup.
 
@@ -29,4 +29,4 @@ openfront.admin defaults to operators. Grant it only to trusted server administr
 
 ## Safety and operations
 
-Test configuration changes on a disposable server first. Monitor the server log for scheduled-economy or database errors. Keep PocketMine-MP and PHP up to date. The current release is a development MVP: it has no isolated simultaneous arenas, no full movement/teleport boundary enforcement, and no automatic victory-condition evaluator. Player match membership is retained during disconnects and restored to the match-world spawn on reconnect. Do not advertise it as a finished competitive game mode.
+Test configuration changes on a disposable server first. Monitor the server log for scheduled-economy or database errors. Keep PocketMine-MP and PHP up to date. The current release is a development MVP: it has no isolated simultaneous arenas, no full movement/teleport boundary enforcement, and shared campaign data between matches. Victory evaluation supports last-country-standing, score, territory control, special city-site objectives, research, economic assets, and time limit; tune these rules under match.victory. Player match membership is retained during disconnects and restored to the match-world spawn on reconnect. Do not advertise it as a finished competitive game mode.

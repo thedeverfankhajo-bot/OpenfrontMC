@@ -13,6 +13,7 @@ use OpenFrontMC\Language\LanguageManager;
 use OpenFrontMC\Listener\PlayerSessionListener;
 use OpenFrontMC\Listener\WorldProtectionListener;
 use OpenFrontMC\Match\MatchManager;
+use OpenFrontMC\Match\VictoryManager;
 use OpenFrontMC\Research\ResearchManager;
 use OpenFrontMC\Research\TechnologyTree;
 use OpenFrontMC\Storage\Database;
@@ -76,6 +77,11 @@ final class Bootstrap{
         $countries = new CountryManager($this->database, is_array($economyConfig["starting"] ?? null) ? $economyConfig["starting"] : []);
         $economy = new EconomyManager($this->database, $economyConfig);
         $matches = new MatchManager($this->database);
+        $victoryConfig = $this->plugin->getConfig()->getNested("match.victory", []);
+        if(!is_array($victoryConfig)){
+            throw new \RuntimeException("Match victory configuration must be a mapping.");
+        }
+        $victory = new VictoryManager($this->database, $matches, $victoryConfig);
 
         $buildingConfig = (new Config($this->plugin->getDataFolder() . "buildings/buildings.yml", Config::YAML))->getAll();
         $technologyConfig = (new Config($this->plugin->getDataFolder() . "research/technology.yml", Config::YAML))->getAll();
@@ -129,6 +135,25 @@ final class Bootstrap{
                 $this->plugin->getLogger()->warning("OpenFrontMC database backup failed: " . $e->getMessage());
             }
         }), $backupIntervalHours * 3600 * 20);
+
+        $victoryInterval = max(1, min(60, (int) $this->plugin->getConfig()->getNested("match.victory.evaluation-interval-seconds", 5)));
+        $this->plugin->getScheduler()->scheduleRepeatingTask(new ClosureTask(function() use($victory, $worlds) : void{
+            try{
+                $result = $victory->evaluateActive();
+                if($result === null){
+                    return;
+                }
+                foreach($this->plugin->getServer()->getOnlinePlayers() as $player){
+                    if(in_array($player->getName(), $result["players"], true)){
+                        $player->sendMessage("§aMatch finished! Winner: §f" . $result["winner_name"] . " §7[" . $result["winner_tag"] . "] §8(" . $result["reason"] . ")");
+                        $player->teleport($worlds->getLobby()->getSpawnLocation());
+                    }
+                }
+                $this->plugin->getLogger()->notice("Match " . $result["match_id"] . " finished; winner " . $result["winner_tag"] . " by " . $result["reason"] . ".");
+            }catch(Throwable $e){
+                $this->plugin->getLogger()->warning("Match victory evaluation failed: " . $e->getMessage());
+            }
+        }), $victoryInterval * 20);
 
         $periodSeconds = max(30, min(3600, (int) ($economyConfig["period-seconds"] ?? 120)));
         $this->plugin->getScheduler()->scheduleRepeatingTask(new ClosureTask(function() use($economy, $buildings, $research, $diplomacy) : void{
