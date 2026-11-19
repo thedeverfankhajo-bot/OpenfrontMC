@@ -11,8 +11,8 @@ if ! command -v curl >/dev/null 2>&1; then
   exit 1
 fi
 
-ROOT_DIR="$(cd "$(dirname "\${BASH_SOURCE[0]}")/.." && pwd)"
-INSTALL_DIR="\${1:-$ROOT_DIR/.runtime/pocketmine}"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+INSTALL_DIR="${1:-$ROOT_DIR/.runtime/pocketmine}"
 mkdir -p "$INSTALL_DIR"
 INSTALL_DIR="$(cd "$INSTALL_DIR" && pwd)"
 
