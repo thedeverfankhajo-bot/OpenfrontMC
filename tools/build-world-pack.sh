@@ -17,8 +17,12 @@ if [[ ! -s "$SERVER_DIR/PocketMine-MP.phar" || ! -s "$SERVER_DIR/start.sh" ]]; t
   echo "PocketMine-MP is not installed in: $SERVER_DIR" >&2
   exit 1
 fi
-if [[ ! -x "$SERVER_DIR/bin/php7/bin/php" ]]; then
-  echo "The official PocketMine PHP runtime is missing." >&2
+PHP_BIN="$(find "$SERVER_DIR/bin" -type f -name php -perm -u+x -print -quit 2>/dev/null || true)"
+if [[ -z "$PHP_BIN" ]]; then
+  PHP_BIN="$(find "$SERVER_DIR/bin" -type l -name php -print -quit 2>/dev/null || true)"
+fi
+if [[ -z "$PHP_BIN" || ! -x "$PHP_BIN" ]]; then
+  echo "The bundled Axolotl-PM PHP runtime is missing." >&2
   exit 1
 fi
 for command_name in zip; do
@@ -125,7 +129,7 @@ if [[ ! -s "$DB_FILE" ]]; then
   exit 1
 fi
 
-"$SERVER_DIR/bin/php7/bin/php" -r '
+"$PHP_BIN" -r '
 $db = new SQLite3($argv[1], SQLITE3_OPEN_READONLY);
 $integrity = $db->querySingle("PRAGMA integrity_check");
 $rendered = (int) $db->querySingle("SELECT COUNT(*) FROM rendered_territories");
