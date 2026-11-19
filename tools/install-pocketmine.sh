@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 if [[ "$(uname -s)" != "Linux" && "$(uname -s)" != "Darwin" ]]; then
-  echo "The official PocketMine installer supports Linux and macOS only." >&2
+  echo "The official Axolotl-PM installer supports Linux and macOS only." >&2
   exit 1
 fi
 
@@ -17,20 +17,29 @@ mkdir -p "$INSTALL_DIR"
 INSTALL_DIR="$(cd "$INSTALL_DIR" && pwd)"
 
 if [[ -f "$INSTALL_DIR/PocketMine-MP.phar" && -f "$INSTALL_DIR/start.sh" ]]; then
-  echo "PocketMine-MP is already installed at: $INSTALL_DIR"
+  echo "A PocketMine-compatible server is already installed at: $INSTALL_DIR"
   echo "Remove that folder first to install a clean copy."
   exit 0
 fi
 
-echo "Installing the latest stable PocketMine-MP 5.x release..."
+echo "Installing the latest stable Axolotl-PM (PocketMine API 5-compatible)..."
 (
   cd "$INSTALL_DIR"
-  curl --fail --location --silent --show-error https://get.pmmp.io | bash -s - -v 5
+  curl --fail --location --silent --show-error https://get.axolotl-pm.org | bash -s -
 )
 
 test -s "$INSTALL_DIR/PocketMine-MP.phar"
 test -s "$INSTALL_DIR/start.sh"
-test -x "$INSTALL_DIR/bin/php7/bin/php"
 
-echo "PocketMine-MP API 5 runtime installed at: $INSTALL_DIR"
-"$INSTALL_DIR/bin/php7/bin/php" -v | head -n 1
+PHP_BIN="$(find "$INSTALL_DIR/bin" -type f -name php -perm -u+x -print -quit 2>/dev/null || true)"
+if [[ -z "$PHP_BIN" ]]; then
+  PHP_BIN="$(find "$INSTALL_DIR/bin" -type l -name php -print -quit 2>/dev/null || true)"
+fi
+if [[ -z "$PHP_BIN" || ! -x "$PHP_BIN" ]]; then
+  echo "Axolotl-PM PHP runtime was not found under $INSTALL_DIR/bin." >&2
+  exit 1
+fi
+
+echo "Axolotl-PM installed at: $INSTALL_DIR"
+echo "Bundled PHP runtime: $PHP_BIN"
+"$PHP_BIN" -v | head -n 1
