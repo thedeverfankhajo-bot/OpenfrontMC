@@ -72,9 +72,19 @@ CREATE TABLE IF NOT EXISTS research_queue (
     completes_at INTEGER NOT NULL,
     FOREIGN KEY(country_id) REFERENCES countries(id) ON DELETE CASCADE
 );
-ALTER TABLE matches ADD COLUMN end_reason TEXT NOT NULL DEFAULT '';
 PRAGMA user_version = 3;
 SQL);
+                $columns = $this->fetchAll("PRAGMA table_info(matches)");
+                $hasEndReason = false;
+                foreach($columns as $column){
+                    if(($column["name"] ?? null) === "end_reason"){
+                        $hasEndReason = true;
+                        break;
+                    }
+                }
+                if(!$hasEndReason){
+                    $this->runExec("ALTER TABLE matches ADD COLUMN end_reason TEXT NOT NULL DEFAULT ''");
+                }
             });
             return;
         }
