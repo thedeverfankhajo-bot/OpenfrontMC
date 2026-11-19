@@ -167,10 +167,12 @@ try{
     $assert($buildingManager->production($countryId) === [], "building demolition");
 
     $research = new ResearchManager($database, $economy, $tree);
+    $expectException(static fn() => $research->unlock($countryId, "PlayerOne", "advanced_science"), "research prerequisite enforced before prerequisite unlock");
     $research->unlock($countryId, "PlayerOne", "basic_science");
     $assert($research->isCompleted($countryId, "basic_science"), "research unlocked");
     $assert($research->productionMultipliers($countryId)["research"] > 1.0, "research effect applied");
-    $expectException(static fn() => $research->unlock($countryId, "PlayerOne", "advanced_science"), "research prerequisite enforced");
+    $research->unlock($countryId, "PlayerOne", "advanced_science");
+    $assert($research->isCompleted($countryId, "advanced_science"), "dependent research unlocks after prerequisite");
 
     $diplomacy = new DiplomacyManager($database, [
         "request-expiry-seconds" => 3600, "max-pending-per-hour" => 4,
