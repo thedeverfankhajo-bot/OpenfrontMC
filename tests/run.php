@@ -76,6 +76,14 @@ $assert($mapA === $mapB, "seed reproducibility");
 $assert($mapA !== $mapC, "different seeds vary map");
 $assert(count($mapA) === 64, "map dimensions");
 $assert(count(array_filter($mapA, static fn(array $tile) : bool => $tile["terrain"] !== "WATER")) > 0, "land exists");
+$waterCount = count(array_filter($mapA, static fn(array $tile) : bool => $tile["terrain"] === "WATER"));
+$assert(abs(($waterCount / 64) - 0.55) <= (1 / 64), "water ratio follows requested value");
+$highWaterMap = $generator->generate(12345, 8, 8, 2, 4, 0.80);
+$highWaterCount = count(array_filter($highWaterMap, static fn(array $tile) : bool => $tile["terrain"] === "WATER"));
+$assert($highWaterCount > $waterCount, "higher water ratio creates more water");
+foreach([[4,4],[3,4],[5,4],[4,3],[4,5]] as [$spawnX,$spawnZ]){
+    $assert($mapA[$spawnZ * 8 + $spawnX]["terrain"] !== "WATER", "spawn expansion cell is land");
+}
 $assert($mapA[4 * 8 + 4]["terrain"] !== "WATER", "central spawn territory is land");
 $expectException(static fn() => $generator->generate(1, 2, 2, 1, 1, 0.5), "map bounds validated");
 
