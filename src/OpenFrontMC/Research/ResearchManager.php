@@ -56,6 +56,13 @@ final class ResearchManager{
     /**
      * @return list<string>
      */
+    public function isCompleted(string $countryId, string $technologyId) : bool{
+        return $this->database->fetchOne(
+            "SELECT technology_id FROM research WHERE country_id=? AND technology_id=?",
+            [$countryId, $technologyId]
+        ) !== null;
+    }
+
     public function completed(string $countryId) : array{
         return array_map(
             static fn(array $row) : string => (string) $row["technology_id"],
