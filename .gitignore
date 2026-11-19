@@ -9,3 +9,10 @@
 .idea/
 .vscode/
 .DS_Store
+
+# Generated server builds and prepared worlds
+/dist/
+/.runtime/
+*.zip
+*.tar.gz
+world-builder.log
