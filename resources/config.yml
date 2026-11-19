@@ -25,6 +25,7 @@ match:
   minimum-players: 2
   countdown-seconds: 20
 performance:
-  map-tiles-per-tick: 32
+  map-tiles-per-tick: 1
+  map-render-interval-ticks: 4
   max-operations-per-tick: 64
 language: en_US

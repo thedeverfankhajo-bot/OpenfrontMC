@@ -2,7 +2,7 @@
 
 OpenFrontMC is an original multiplayer territorial strategy game mode for Minecraft Bedrock servers running PocketMine-MP API 5. It uses abstract strategy-game rules, server-authoritative decisions, and persistent SQLite state.
 
-> **Release status: development MVP (0.2.0), not production-certified.** This release adds playable country setup, deterministic territory metadata, server-side territory claiming, resource transactions, building economy, instant technology unlocks, diplomacy agreements, repeating income/production, match membership and state transitions, and bilingual chat commands. It is not yet the full multi-arena strategy game in the long-term specification.
+> **Release status: development MVP (0.3.0), not production-certified.** This release adds resumable physical terrain rendering to the deterministic territory map. The game still needs additional match isolation, win-condition evaluation, player roles/invitations, physical building structures, research queues, and full Bedrock UI before it can be considered production-complete.
 
 ## Requirements
 
@@ -21,7 +21,9 @@ The plugin does not use PocketMine-MP API 4 or API 6 interfaces. It must be test
 4. Review the copied buildings/buildings.yml, research/technology.yml, and language files.
 5. Use /openfront help.
 
-The plugin creates or loads the managed worlds openfront_lobby and openfront_world; it does not replace or modify the server default world. The current procedural generator persists a deterministic 16×16 territory grid by default. Each territory represents a 16×16 block region, corresponding to 256×256 blocks of strategic map space. **The current build stores and displays strategic map metadata; it does not yet render that grid as a fully generated physical terrain map or place building structures as Minecraft blocks.**
+The plugin creates or loads the managed worlds openfront_lobby and openfront_world; it does not replace or modify the server default world. The procedural generator persists a deterministic 16×16 territory grid by default. Each territory represents a 16×16 block region, corresponding to a 256×256 block strategic map. The match-world renderer turns each stored territory into a block surface (grassland/island or sand-and-water) on a raised board above the world's normal terrain. The center territory is guaranteed to be land and becomes the match-world spawn after rendering.
+
+Terrain rendering uses PocketMine's public chunk-population and block-placement APIs. It is deliberately incremental and stores completion per territory in SQLite, so an interrupted first render resumes on the next server start. The raised board avoids replacing the server's normal world terrain.
 
 ## Commands
 
@@ -56,9 +58,9 @@ Territory coordinates are zero-based territory-grid coordinates, not block coord
 - openfront.research — technology commands (default true)
 - openfront.diplomacy — diplomacy commands (default true)
 - openfront.admin — administrative commands (default op)
-- openfront.admin.build — break/place blocks in managed worlds (default op)
+- openfront.admin.build — block build/break override in managed worlds (default op)
 
-## Gameplay systems in 0.2.0
+## Gameplay systems in 0.3.0
 
 ### Countries and territories
 
@@ -70,7 +72,7 @@ Countries own six resources: gold, food, materials, energy, research, and influe
 
 ### Buildings
 
-Building definitions are loaded from resources/buildings/buildings.yml. The current service supports placement on owned land, per-country/per-territory limits, upgrade costs, levels, controlled demolition, production, and transaction rollback. Buildings are logical records, not yet a visual block structure.
+Building definitions are loaded from resources/buildings/buildings.yml. The current service supports placement on owned land, per-country/per-territory limits, upgrade costs, levels, controlled demolition, production, and transaction rollback. Buildings are logical records, not yet visual block structures.
 
 ### Research
 
@@ -82,7 +84,7 @@ Alliance, trade, non-aggression, and peace requests can be offered to another co
 
 ### Matches
 
-The match service supports FFA, team, solo, and custom mode identifiers; capacity checks; unique active player membership; ready state; and guarded WAITING/COUNTDOWN/RUNNING/PAUSED/FINISHED transitions. The command layer currently operates a shared managed match world and provides an admin countdown. Independent simultaneous world instances, teams assignment, complete win-condition evaluation, automatic winner selection, and a full match reset flow remain incomplete.
+The match service supports FFA, team, solo, and custom mode identifiers; capacity checks; unique active player membership; ready state; and guarded WAITING/COUNTDOWN/RUNNING/PAUSED/FINISHED transitions. The command layer currently operates a shared managed match world. Independent simultaneous world instances, teams assignment, complete win-condition evaluation, automatic winner selection, and a full match reset flow remain incomplete.
 
 ### User interface
 
@@ -90,23 +92,23 @@ This release uses localized chat commands and textual map output. Inventory form
 
 ## Configuration
 
-Edit plugin_data/OpenFrontMC/config.yml. Important settings include map seed and dimensions, territory size, claim cost, economy capacity, periodic income interval, starting resources, diplomacy request limits and treaty duration, match capacity, countdown length, and language (en_US or fa_IR). Economic capacity, starting balances, periodic income, and income interval are configured in plugin_data/OpenFrontMC/economy.yml. Building and research settings are configured in their respective resource YAML files.
+Edit plugin_data/OpenFrontMC/config.yml. Important settings include map seed and dimensions, territory size, claim cost, economy capacity, periodic income interval, starting resources, diplomacy request limits and treaty duration, match capacity, countdown length, terrain render interval, and language (en_US or fa_IR). Economic capacity, starting balances, periodic income, and income interval are configured in plugin_data/OpenFrontMC/economy.yml. Building and research settings are configured in their respective resource YAML files.
 
 Changing map generation settings does not overwrite an existing persisted map. Back up the database before deliberately regenerating or migrating map data. No automatic destructive map reset is exposed to players.
 
 ## Persistence and backups
 
-SQLite uses prepared statements, foreign keys, WAL mode, busy timeout, and explicit transactions. Back up the entire plugin_data/OpenFrontMC folder and both managed world folders before upgrades or maintenance. Stop the server before copying a SQLite database together with its WAL files.
+SQLite uses prepared statements, foreign keys, WAL mode, busy timeout, and explicit transactions. Terrain-render progress is stored per territory, and completed terrain is not rebuilt on ordinary restarts. Back up the entire plugin_data/OpenFrontMC folder and both managed world folders before upgrades or maintenance. Stop the server before copying a SQLite database together with its WAL files.
 
 ## Development and tests
 
 Run Composer validation, install dev tools, then run the project test and analysis scripts. PHP syntax can be checked using PHP lint on all PHP files in src and tests.
 
-The unit suite includes a SQLite-backed service integration test. Tests against a live PocketMine-MP server, Bedrock client behavior, chunk generation, and restart durability must be run on a real API 5 server; they are not claimed as passed by the repository CI unit suite.
+The unit suite includes a SQLite-backed service integration test. Tests against a live PocketMine-MP server, Bedrock client rendering, chunk-population timing, and actual restart recovery must be run on a real API 5 server; they are not claimed as passed by the repository CI unit suite.
 
 ## Known limitations
 
-This is a development MVP, not a production-ready public-server release. It does not yet include complete membership invitations/roles, country leadership transfer, real terrain rendering, physical block buildings, trade settlement, research timers, multiple isolated matches, full victory condition evaluation, player reconnection restoration, inventory-form UI, complete teleport/arena boundary enforcement, or a PocketMine server integration test harness. Admin controls are intentionally narrow. Deploy to a test server first, review permissions, and keep verified backups.
+This is a development MVP, not a production-ready public-server release. The terrain board currently renders region-level land/water surfaces rather than detailed mountains, coastlines, or biome decoration. It does not yet provide physical building structures, research timers, multiple isolated matches, full victory-condition evaluation, player reconnection restoration, inventory-form UI, complete teleport/arena boundary enforcement, or a PocketMine server integration test harness. Admin controls are intentionally narrow. Deploy to a test server first, review permissions, and keep verified backups.
 
 ## Documentation
 

@@ -121,7 +121,11 @@ $database = null;
 try{
     $database = new Database($databasePath);
     $database->migrate();
-    $assert((int) ($database->fetchOne("PRAGMA user_version")["user_version"] ?? 0) === 1, "database migration");
+    $assert((int) ($database->fetchOne("PRAGMA user_version")["user_version"] ?? 0) === 2, "database migration version");
+    $database->migrate();
+    $assert((int) ($database->fetchOne("PRAGMA user_version")["user_version"] ?? 0) === 2, "database migration is idempotent");
+    $renderTable = $database->fetchOne("SELECT name FROM sqlite_master WHERE type='table' AND name='rendered_territories'");
+    $assert($renderTable !== null, "terrain render progress migration");
 
     $countries = new CountryManager($database, [
         "gold" => 200, "food" => 80, "materials" => 80,
@@ -141,6 +145,11 @@ try{
     $expectException(static fn() => $territories->claim("PlayerOne", $countryId, 4, 4, 25), "duplicate territory claim rejected");
     $expectException(static fn() => $territories->claim("PlayerOne", $countryId, 999, 999, 25), "out-of-map claim rejected");
     $assert((int) $database->fetchOne("SELECT gold FROM resources WHERE country_id=?", [$countryId])["gold"] === 175, "territory claim cost debited");
+
+    $database->execute("INSERT INTO rendered_territories(territory_id,rendered_at) VALUES(?,?)", ["4:4", time()]);
+    $assert((int) ($database->fetchOne("SELECT COUNT(*) AS c FROM rendered_territories")["c"] ?? 0) === 1, "rendered territory checkpoint stored");
+    $territories->markRendered();
+    $assert((int) $territories->metadata()["rendered"] === 1, "map marked rendered");
 
     $economy = new EconomyManager($database, ["capacity" => 1000, "income_per_period" => ["gold" => 5]]);
     $economy->change($countryId, "PlayerOne", "UNIT_TEST_CREDIT", ["gold" => 10]);
@@ -201,6 +210,29 @@ try{
     }
     foreach(["", "-wal", "-shm"] as $suffix){
         $path = $databasePath . $suffix;
+        if(is_file($path)){
+            @unlink($path);
+        }
+    }
+}
+
+
+$legacyDatabasePath = sys_get_temp_dir() . "/openfrontmc-legacy-" . bin2hex(random_bytes(6)) . ".sqlite3";
+$legacyDatabase = null;
+try{
+    $legacyDatabase = new Database($legacyDatabasePath);
+    $legacyDatabase->migrate();
+    $legacyDatabase->execute("DROP TABLE rendered_territories");
+    $legacyDatabase->execute("PRAGMA user_version = 1");
+    $legacyDatabase->migrate();
+    $assert((int) ($legacyDatabase->fetchOne("PRAGMA user_version")["user_version"] ?? 0) === 2, "version 1 database migrates forward");
+    $assert($legacyDatabase->fetchOne("SELECT name FROM sqlite_master WHERE type='table' AND name='rendered_territories'") !== null, "version 1 migration adds terrain checkpoints");
+}finally{
+    if($legacyDatabase instanceof Database){
+        $legacyDatabase->close();
+    }
+    foreach(["", "-wal", "-shm"] as $suffix){
+        $path = $legacyDatabasePath . $suffix;
         if(is_file($path)){
             @unlink($path);
         }

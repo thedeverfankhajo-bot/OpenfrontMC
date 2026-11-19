@@ -28,6 +28,28 @@ final class Database{
     }
 
     public function migrate() : void{
+        $versionRow = $this->fetchOne("PRAGMA user_version");
+        $version = (int) ($versionRow["user_version"] ?? 0);
+        if($version > 2){
+            throw new RuntimeException("The database schema is newer than this plugin version supports.");
+        }
+        if($version === 2){
+            return;
+        }
+        if($version === 1){
+            $this->transaction(function() : void{
+                $this->runExec(<<<SQL
+CREATE TABLE IF NOT EXISTS rendered_territories (
+    territory_id TEXT PRIMARY KEY,
+    rendered_at INTEGER NOT NULL,
+    FOREIGN KEY(territory_id) REFERENCES territories(id) ON DELETE CASCADE
+);
+PRAGMA user_version = 2;
+SQL);
+            });
+            return;
+        }
+
         $sql = <<<SQL
 CREATE TABLE IF NOT EXISTS players (
     player_name TEXT PRIMARY KEY,
@@ -95,6 +117,11 @@ CREATE TABLE IF NOT EXISTS map_metadata (
     rendered INTEGER NOT NULL DEFAULT 0,
     generated_at INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS rendered_territories (
+    territory_id TEXT PRIMARY KEY,
+    rendered_at INTEGER NOT NULL,
+    FOREIGN KEY(territory_id) REFERENCES territories(id) ON DELETE CASCADE
+);
 CREATE TABLE IF NOT EXISTS matches (
     id TEXT PRIMARY KEY,
     mode TEXT NOT NULL,
@@ -161,9 +188,11 @@ CREATE TABLE IF NOT EXISTS statistics (
     territories_claimed INTEGER NOT NULL DEFAULT 0,
     updated_at INTEGER NOT NULL
 );
-PRAGMA user_version = 1;
+PRAGMA user_version = 2;
 SQL;
-        $this->runExec($sql);
+        $this->transaction(function() use($sql) : void{
+            $this->runExec($sql);
+        });
     }
 
     /**

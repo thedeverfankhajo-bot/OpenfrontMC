@@ -18,6 +18,7 @@ use OpenFrontMC\Research\TechnologyTree;
 use OpenFrontMC\Storage\Database;
 use OpenFrontMC\Territory\TerritoryManager;
 use OpenFrontMC\World\MapGenerator;
+use OpenFrontMC\World\TerrainRenderer;
 use OpenFrontMC\World\WorldManager;
 use pocketmine\plugin\PluginBase;
 use pocketmine\scheduler\ClosureTask;
@@ -28,12 +29,13 @@ final class Bootstrap{
 
     private Database $database;
     private OpenFrontCommand $command;
+    private ?TerrainRenderer $terrainRenderer = null;
 
     public function __construct(private PluginBase $plugin){}
 
     public function start() : void{
         $this->plugin->saveDefaultConfig();
-        foreach(["buildings/buildings.yml", "research/technology.yml", "economy.yml", "languages/en_US.yml", "languages/fa_IR.yml"] as $resource){
+        foreach(["buildings/buildings.yml", "research/technology.yml", "economy.yml", "languages/en_US.yml", "languages/fa_IR.yml", "maps/default.yml"] as $resource){
             $this->plugin->saveResource($resource);
         }
 
@@ -62,6 +64,10 @@ final class Bootstrap{
             );
             $territories->seedNeutralMap($seed, $width, $height, $tiles);
         }
+
+        $this->terrainRenderer = new TerrainRenderer($this->plugin, $this->database, $territories);
+        $renderInterval = (int) $this->plugin->getConfig()->getNested("performance.map-render-interval-ticks", 4);
+        $this->terrainRenderer->start($worlds->getMatchWorld(), $renderInterval);
 
         $economyConfig = (new Config($this->plugin->getDataFolder() . "economy.yml", Config::YAML))->getAll();
         if(!is_array($economyConfig)){
@@ -94,7 +100,8 @@ final class Bootstrap{
             $buildings,
             $research,
             $diplomacy,
-            $language
+            $language,
+            $this->terrainRenderer
         );
 
         $pluginManager = $this->plugin->getServer()->getPluginManager();
@@ -124,6 +131,7 @@ final class Bootstrap{
     }
 
     public function shutdown() : void{
+        $this->terrainRenderer?->shutdown();
         if(isset($this->database)){
             $this->database->close();
         }

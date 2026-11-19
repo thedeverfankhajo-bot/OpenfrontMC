@@ -14,6 +14,7 @@ use OpenFrontMC\Match\MatchState;
 use OpenFrontMC\Research\ResearchManager;
 use OpenFrontMC\Security\RateLimiter;
 use OpenFrontMC\Territory\TerritoryManager;
+use OpenFrontMC\World\TerrainRenderer;
 use OpenFrontMC\World\WorldManager;
 use pocketmine\command\CommandSender;
 use pocketmine\player\Player;
@@ -36,7 +37,8 @@ final class OpenFrontCommand{
         private BuildingManager $buildings,
         private ResearchManager $research,
         private DiplomacyManager $diplomacy,
-        private LanguageManager $language
+        private LanguageManager $language,
+        private TerrainRenderer $terrainRenderer
     ){
         $this->rateLimiter = new RateLimiter();
     }
@@ -328,6 +330,10 @@ final class OpenFrontCommand{
         if(!$sender instanceof Player){
             throw new RuntimeException("Players only.");
         }
+        if(!$this->terrainRenderer->isReady()){
+            $failure = $this->terrainRenderer->getFailure();
+            throw new RuntimeException($failure ?? "The strategy map is still being generated. Please try again shortly.");
+        }
         if(!$this->rateLimiter->allow($sender->getName() . ":join", 2.0)){
             throw new RuntimeException("Please wait before joining a match again.");
         }
@@ -398,7 +404,8 @@ final class OpenFrontCommand{
         }
         if($action === "status"){
             $match = $this->matches->latestActive();
-            $sender->sendMessage($this->language->get("admin-status"));
+            $mapStatus = $this->terrainRenderer->isReady() ? "§aReady" : ($this->terrainRenderer->getFailure() !== null ? "§cFailed: " . $this->terrainRenderer->getFailure() : "§eGenerating");
+            $sender->sendMessage($this->language->get("admin-status") . " §7Map: " . $mapStatus);
             if($match !== null){
                 $sender->sendMessage($this->language->get("match-status", [
                     "id" => $match["id"],
@@ -415,7 +422,8 @@ final class OpenFrontCommand{
             return;
         }
         if($action === "setup"){
-            $sender->sendMessage("§aManaged worlds are loaded: " . $this->worlds->getLobby()->getFolderName() . ", " . $this->worlds->getMatchWorld()->getFolderName());
+            $mapStatus = $this->terrainRenderer->isReady() ? "§aReady" : ($this->terrainRenderer->getFailure() !== null ? "§cFailed: " . $this->terrainRenderer->getFailure() : "§eGenerating");
+            $sender->sendMessage("§aManaged worlds are loaded: " . $this->worlds->getLobby()->getFolderName() . ", " . $this->worlds->getMatchWorld()->getFolderName() . " §7Map: " . $mapStatus);
             return;
         }
         if($action === "start"){
